@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <RelativeLayout
+        android:layout_height="match_parent"
+        android:layout_width="match_parent">
+        <ImageView
+            android:src="@drawable/ntoolbox_android"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/imageView1"
+            android:scaleType="fitCenter"
+            android:alpha="0.2" />
+        <ScrollView
+            android:minWidth="25px"
+            android:minHeight="25px"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/scrollView1">
+            <LinearLayout
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:orientation="vertical"
+                android:minWidth="25px"
+                android:minHeight="25px"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="8dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp">
+                    <TextView
+                        android:id="@+id/deviceName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="6"
+                        android:text="Devicename:"
+                        android:textAppearance="?android:attr/textAppearanceMedium" />
+                    <EditText
+                        android:id="@+id/profileName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="5"
+                        android:text="profil"
+                        android:tag="regex[^a-zA-Z0-9\\-\\+\\.]"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:gravity="left"
+                        android:maxLength="8" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="5"
+                        android:text="Power:"
+                        android:textAppearance="?android:attr/textAppearanceMedium" />
+                    <EditText
+                        android:inputType="numberDecimal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="6"
+                        android:text="20"
+                        android:tag="0.0"
+                        android:id="@+id/power" />
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="8"
+                        android:text="W"
+                        android:textAppearance="?android:attr/textAppearanceMedium" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="6"
+                        android:text="Preheat Type:"
+                        android:textAppearance="?android:attr/textAppearanceMedium" />
+                    <Spinner
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="5"
+                        android:id="@+id/spinnerPreheat" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/layoutPreheatCurve">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="6"
+                        android:text="Preheat Curve:"
+                        android:textAppearance="?android:attr/textAppearanceMedium" />
+                    <Spinner
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="5"
+                        android:id="@+id/spinnerPreheatCurve" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:id="@+id/layoutPreheatPower">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="5"
+                            android:text="Preheat Power:"
+                            android:textAppearance="?android:attr/textAppearanceMedium" />
+                        <EditText
+                            android:inputType="number"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="6"
+                            android:text="0"
+                            android:id="@+id/preheatPower" />
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="8"
+                            android:text="W"
+                            android:textAppearance="?android:attr/textAppearanceMedium"
+                            android:id="@+id/preheatPowerType" />
+                    </LinearLayout>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="5"
+                            android:text="Preheat Time:"
+                            android:textAppearance="?android:attr/textAppearanceMedium" />
+                        <EditText
+                            android:inputType="numberDecimal"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="6"
+                            android:text="0.0"
+                            android:tag="0.0"
+                            android:id="@+id/preheatTime" />
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="8"
+                            android:text="s"
+                            android:textAppearance="?android:attr/textAppearanceMedium" />
+                    </LinearLayout>
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="5"
+                        android:text="Preheat Delay:"
+                        android:textAppearance="?android:attr/textAppearanceMedium" />
+                    <EditText
+                        android:inputType="number"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="6"
+                        android:text="0"
+                        android:id="@+id/preheatDelay" />
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="8"
+                        android:text="s"
+                        android:textAppearance="?android:attr/textAppearanceMedium" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="6"
+                        android:text="Mode:"
+                        android:textAppearance="?android:attr/textAppearanceMedium" />
+                    <Spinner
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="5"
+                        android:id="@+id/spinnerMode" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:id="@+id/layoutTempControl">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="6"
+                            android:text="Coil Material:"
+                            android:textAppearance="?android:attr/textAppearanceMedium" />
+                        <Spinner
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="5"
+                            android:id="@+id/spinnerMaterial" />
+                    </LinearLayout>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="5"
+                            android:text="Resistance"
+                            android:textAppearance="?android:attr/textAppearanceMedium" />
+                        <EditText
+                            android:inputType="numberDecimal"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="6"
+                            android:text="0.31"
+                            android:tag="0.000"
+                            android:id="@+id/resistance" />
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="8"
+                            android:text="Ohm"
+                            android:textAppearance="?android:attr/textAppearanceMedium" />
+                    </LinearLayout>
+                    <CheckBox
+                        android:text="Resistance Locked"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/resistanceLocked"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="5"
+                            android:text="Temperatur:"
+                            android:textAppearance="?android:attr/textAppearanceMedium" />
+                        <EditText
+                            android:inputType="number"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="6"
+                            android:text="235"
+                            android:id="@+id/temperatur" />
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="8"
+                            android:text="°C"
+                            android:id="@+id/temperaturType"
+                            android:textAppearance="?android:attr/textAppearanceMedium" />
+                    </LinearLayout>
+                    <CheckBox
+                        android:text="Temperatur Dominant"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/tempDominant"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:layout_gravity="right" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <Button
+                      
+                        android:id="@+id/download"
+                        android:layout_weight="5"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Download" />
+                    <Button
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:id="@+id/upload"
+                        android:layout_weight="5"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Upload Settings" />
+                </LinearLayout>
+            </LinearLayout>
+        </ScrollView>
+    </RelativeLayout>
+</LinearLayout>

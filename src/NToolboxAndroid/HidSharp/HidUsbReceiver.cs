@@ -50,17 +50,20 @@ namespace NCore.USB
                           //  HidConnector.Instance.RefreshState();
                             return;
                         }
-                        HidDeviceLoader.mPermissionIntent = null;
+                        HidDeviceLoader.permissionPending = null;
 
                     }
                 }
             }
             if (intent.Action == UsbManager.ActionUsbDeviceAttached)
             {
+               
+                HidDeviceLoader.permissionPending = null;
                 //HidConnector.Instance.RefreshState();
             }
             if (intent.Action == UsbManager.ActionUsbDeviceDetached)
             {
+                HidDeviceLoader.permissionPending = null;
                 //HidConnector.Instance.RefreshState();
             }
           

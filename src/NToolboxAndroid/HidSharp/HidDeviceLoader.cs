@@ -16,7 +16,7 @@ namespace HidSharp
 {
     public class HidDeviceLoader
     {
-        public static PendingIntent mPermissionIntent;
+        public static PendingIntent permissionPending;
         public HidStream GetDeviceOrDefault(int vendorId, int productId)
         {
            
@@ -27,10 +27,14 @@ namespace HidSharp
                 {
                     if (!usbManager.HasPermission(device))
                     {
-                     //   if (mPermissionIntent != null)
+                        lock (this)
                         {
-                            mPermissionIntent = PendingIntent.GetBroadcast(Application.Context, 0, new Intent(HidUsbReceiver.ACTION_USB_PERMISSION), 0);
-                            usbManager.RequestPermission(device, mPermissionIntent);
+                            if (permissionPending==null)
+                            {
+                               
+                                permissionPending = PendingIntent.GetBroadcast(Application.Context, 0, new Intent(HidUsbReceiver.ACTION_USB_PERMISSION), 0);
+                                usbManager.RequestPermission(device, permissionPending);
+                            }
                         }
                         return null;
                     }

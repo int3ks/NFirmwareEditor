@@ -23,6 +23,7 @@ namespace NToolboxAndroid
 
     [IntentFilter(new string[] { UsbManager.ActionUsbDeviceAttached })]
     [Activity(Label = "NToolboxAndroid", MainLauncher = true, Icon = "@drawable/ntoolbox_android", Theme = "@android:style/Theme.Light.NoTitleBar")]
+    [MetaData(UsbManager.ActionUsbDeviceAttached, Resource = "@xml/device_filter")]
     public class MainActivity : Activity, IOnItemSelectedListener, IOnClickListener
     {
         private const string ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
@@ -262,7 +263,7 @@ namespace NToolboxAndroid
             filter.AddAction(UsbManager.ActionUsbDeviceDetached);
             filter.AddAction(UsbManager.ActionUsbAccessoryAttached);
             filter.AddAction(UsbManager.ActionUsbAccessoryDetached);
-            filter.AddAction(UsbManager.ActionUsbDeviceDetached);
+          
 
             m_HidUsbReceiver = new HidUsbReceiver();
             RegisterReceiver(m_HidUsbReceiver, filter);

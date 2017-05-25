@@ -356,10 +356,10 @@ namespace NToolboxAndroid
         double power_val, preheatPower_val, preheatTime_val, preheatDelay_val, resistance_val, tempteratur_val;
         public string CheckSetData()
         {
-            if (m_deviceConfiguration == null && Debugger.IsAttached)
-            {
-                CreateTestData();
-            }
+            //if (m_deviceConfiguration == null && Debugger.IsAttached)
+            //{
+            //    CreateTestData();
+            //}
 
 
             if (!CheckData()) {

@@ -226,7 +226,8 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="5"
                             android:text="Resistance"
-                            android:textAppearance="?android:attr/textAppearanceMedium" />
+                            android:textAppearance="?android:attr/textAppearanceMedium"
+                            android:id="@+id/resistancetxt" />
                         <EditText
                             android:inputType="numberDecimal"
                             android:layout_width="match_parent"

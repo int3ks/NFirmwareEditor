@@ -63,8 +63,8 @@ namespace NToolboxAndroid
 			// aapt resource value: 0x7f060002
 			public const int deviceName = 2131099650;
 			
-			// aapt resource value: 0x7f060015
-			public const int download = 2131099669;
+			// aapt resource value: 0x7f060016
+			public const int download = 2131099670;
 			
 			// aapt resource value: 0x7f060000
 			public const int imageView1 = 2131099648;
@@ -96,11 +96,14 @@ namespace NToolboxAndroid
 			// aapt resource value: 0x7f060003
 			public const int profileName = 2131099651;
 			
-			// aapt resource value: 0x7f060010
-			public const int resistance = 2131099664;
-			
 			// aapt resource value: 0x7f060011
-			public const int resistanceLocked = 2131099665;
+			public const int resistance = 2131099665;
+			
+			// aapt resource value: 0x7f060012
+			public const int resistanceLocked = 2131099666;
+			
+			// aapt resource value: 0x7f060010
+			public const int resistancetxt = 2131099664;
 			
 			// aapt resource value: 0x7f060001
 			public const int scrollView1 = 2131099649;
@@ -117,17 +120,17 @@ namespace NToolboxAndroid
 			// aapt resource value: 0x7f060007
 			public const int spinnerPreheatCurve = 2131099655;
 			
-			// aapt resource value: 0x7f060014
-			public const int tempDominant = 2131099668;
-			
-			// aapt resource value: 0x7f060012
-			public const int temperatur = 2131099666;
+			// aapt resource value: 0x7f060015
+			public const int tempDominant = 2131099669;
 			
 			// aapt resource value: 0x7f060013
-			public const int temperaturType = 2131099667;
+			public const int temperatur = 2131099667;
 			
-			// aapt resource value: 0x7f060016
-			public const int upload = 2131099670;
+			// aapt resource value: 0x7f060014
+			public const int temperaturType = 2131099668;
+			
+			// aapt resource value: 0x7f060017
+			public const int upload = 2131099671;
 			
 			static Id()
 			{

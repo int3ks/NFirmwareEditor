@@ -82,6 +82,9 @@
     <Compile Include="..\NToolbox\Models\BatteryPresets.cs">
       <Link>BatteryPresets.cs</Link>
     </Compile>
+    <Compile Include="..\NToolbox\Models\MonitoringData.cs">
+      <Link>MonitoringData.cs</Link>
+    </Compile>
     <Compile Include="HidSharp\HidDeviceLoader.cs" />
     <Compile Include="HidSharp\HidStream.cs" />
     <Compile Include="HidSharp\HidUsbReceiver.cs" />

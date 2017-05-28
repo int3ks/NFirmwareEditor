@@ -27,9 +27,10 @@ namespace NToolboxAndroid
     public class MainActivity : Activity, IOnItemSelectedListener, IOnClickListener
     {
         private const string ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
-        private ArcticFoxConfiguration m_deviceConfiguration;
+        private ArcticFoxConfiguration _deviceConfiguration;
+        private MonitoringData _monitor;
         private readonly BackgroundWorker m_worker = new BackgroundWorker { WorkerReportsProgress = true };
-        private readonly Func<BackgroundWorker, byte[]> m_deviceConfigurationProvider = worker => HidConnector.Instance.ReadConfiguration(worker);
+        //   private readonly Func<BackgroundWorker, byte[]> m_deviceConfigurationProvider = worker => HidConnector.Instance.ReadConfiguration(worker);
         Button uploadButton;
         private HidUsbReceiver m_HidUsbReceiver;
 
@@ -80,10 +81,43 @@ namespace NToolboxAndroid
             _InitializeUsb();
 
 
-
+            //t = new Handler();
+            //t.PostDelayed(doRefresh, 500);
 
 
         }
+        Handler t;
+        public void doRefresh()
+        {
+
+            //HidConnector hc = HidConnector.Instance;
+            //if (hc.IsDeviceConnected)
+            //{
+            //    byte[] bytes = null;
+            //    try
+            //    {
+            //        bytes = HidConnector.Instance.ReadMonitoringData();
+            //    }
+            //    catch (Exception e)
+            //    {
+            //        Toast.MakeText(this, e.ToString(), ToastLength.Long);
+            //    }
+
+            //    var data = BinaryStructure.ReadBinary<MonitoringData>(bytes);
+            //    var realResistance = data.RealResistance / 1000f;
+            //    if (realResistance > 0)
+            //    {
+            //        RunOnUiThread(() =>
+            //        {
+
+            //            resistanceTxt.Text = $"Resistance ({realResistance})";
+
+            //        });
+            //    }
+            //}
+            t.PostDelayed(doRefresh, 500);
+        }
+
 
         private void InitControls()
         {
@@ -113,6 +147,9 @@ namespace NToolboxAndroid
             resistance = FindViewById<EditText>(Resource.Id.resistance);
             resistance.FocusChange += FocusChange;
             resistanceLocked = FindViewById<CheckBox>(Resource.Id.resistanceLocked);
+
+            resistanceTxt = FindViewById<TextView>(Resource.Id.resistancetxt);
+            resistanceTxt.SetOnClickListener(this);
 
             temperatur = FindViewById<EditText>(Resource.Id.temperatur);
             temperatur.FocusChange += FocusChange;
@@ -196,16 +233,20 @@ namespace NToolboxAndroid
 
         }
 
-        double Parse(EditText textbox) {
-            try {
+        double Parse(EditText textbox)
+        {
+            try
+            {
                 var str = textbox.Text;
                 return double.Parse(str.Replace(",", "."), CultureInfo.InvariantCulture);
 
-            } catch { return 0; }
+            }
+            catch { return 0; }
         }
 
 
-        bool CheckData() {
+        bool CheckData()
+        {
             try
             {
                 profileName.Text = profileName.Text.ToUpper();
@@ -263,7 +304,7 @@ namespace NToolboxAndroid
             filter.AddAction(UsbManager.ActionUsbDeviceDetached);
             filter.AddAction(UsbManager.ActionUsbAccessoryAttached);
             filter.AddAction(UsbManager.ActionUsbAccessoryDetached);
-          
+
 
             m_HidUsbReceiver = new HidUsbReceiver();
             RegisterReceiver(m_HidUsbReceiver, filter);
@@ -287,59 +328,94 @@ namespace NToolboxAndroid
             HidConnector hc = HidConnector.Instance;
             if (hc.IsDeviceConnected)
             {
-                var readResult = ReadBinaryConfiguration(m_deviceConfigurationProvider, false);
-                m_deviceConfiguration = readResult.Configuration;
+                // var readResult = ReadBinaryConfiguration(m_deviceConfigurationProvider, false);
+                // m_deviceConfiguration = readResult.Configuration;
+
+
+                try
+                {
+                    var cdata = HidConnector.Instance.ReadConfiguration();
+                    _deviceConfiguration = BinaryStructure.ReadBinary<ArcticFoxConfiguration>(cdata);
+                }
+                catch (Exception e)
+                {
+                    // Toast.MakeText(this, $"Unable to read configuration. {e.ToString()}", ToastLength.Long).Show();
+                }
+
+
+                //try
+                //{
+                //    var mdata = HidConnector.Instance.ReadMonitoringData();
+                //    _monitor = BinaryStructure.ReadBinary<MonitoringData>(mdata);
+                //}
+                //catch (Exception e)
+                //{
+                //    //Toast.MakeText(this, $"Unable to read monitordata. {e.ToString()}", ToastLength.Long).Show();
+                //}
+
 
                 RunOnUiThread(() =>
-                {
-                    if (m_deviceConfiguration != null)
-
                     {
-                        LoadBaseData();
+                       
 
-                        var selectedProfile = m_deviceConfiguration.General.Profiles[m_deviceConfiguration.General.SelectedProfile];
 
-                        profileName.Text = selectedProfile.Name;
+                        if (_deviceConfiguration != null)
 
-                        power.Text = (selectedProfile.Power / 10f).ToString();
-
-                        spinnerPreheat.SetSelection((int)selectedProfile.PreheatType);
-
-                        if (selectedProfile.PreheatType == ArcticFoxConfiguration.PreheatType.Watts)
                         {
-                            preheatPower.Text = (selectedProfile.PreheatPower / 10f).ToString();
+                            LoadBaseData();
+
+                            var selectedProfile = _deviceConfiguration.General.Profiles[_deviceConfiguration.General.SelectedProfile];
+
+                            profileName.Text = selectedProfile.Name;
+
+                            power.Text = (selectedProfile.Power / 10f).ToString();
+
+                            spinnerPreheat.SetSelection((int)selectedProfile.PreheatType);
+
+                            if (selectedProfile.PreheatType == ArcticFoxConfiguration.PreheatType.Watts)
+                            {
+                                preheatPower.Text = (selectedProfile.PreheatPower / 10f).ToString();
+                            }
+                            else
+                            {
+                                preheatPower.Text = selectedProfile.PreheatPower.ToString();
+                            }
+
+                            preheatTime.Text = (selectedProfile.PreheatTime / 100f).ToString();
+
+                            preheatDelay.Text = selectedProfile.PreheatDelay.ToString();
+
+                            spinnerMode.SetSelection(((int)selectedProfile.Flags.Material) == 0 ? 0 : 1);
+
+                            var coil = (int)selectedProfile.Flags.Material;
+                            spinnerMaterial.SetSelection(coil);
+
+                            resistance.Text = (selectedProfile.Resistance / 1000f).ToString();
+
+                            resistanceLocked.Checked = selectedProfile.Flags.IsResistanceLocked;
+
+                            temperatur.Text = selectedProfile.Temperature.ToString();
+
+                            temperaturType.Text = selectedProfile.Flags.IsCelcius ? "°C" : "°F";
+
+                            temperaturDominant.Checked = selectedProfile.Flags.IsTemperatureDominant;
+
+
+
+
+
+
+
                         }
-                        else {
-                            preheatPower.Text = selectedProfile.PreheatPower.ToString();
-                        }
-
-                        preheatTime.Text = (selectedProfile.PreheatTime / 100f).ToString();
-
-                        preheatDelay.Text = selectedProfile.PreheatDelay.ToString();
-
-                        spinnerMode.SetSelection(((int)selectedProfile.Flags.Material) == 0 ? 0 : 1);
-
-                        var coil = (int)selectedProfile.Flags.Material;
-                        spinnerMaterial.SetSelection(coil);
-
-                        resistance.Text = (selectedProfile.Resistance / 1000f).ToString();
-
-                        resistanceLocked.Checked = selectedProfile.Flags.IsResistanceLocked;
-
-                        temperatur.Text = selectedProfile.Temperature.ToString();
-
-                        temperaturType.Text = selectedProfile.Flags.IsCelcius ? "°C" : "°F";
-
-                        temperaturDominant.Checked = selectedProfile.Flags.IsTemperatureDominant;
+                    });
 
 
-                    }
-                });
+
             }
         }
         private void CreateTestData()
         {
-            m_deviceConfiguration = new ArcticFoxConfiguration
+            _deviceConfiguration = new ArcticFoxConfiguration
             {
                 General = new ArcticFoxConfiguration.GeneralConfiguration
                 {
@@ -349,11 +425,13 @@ namespace NToolboxAndroid
 
             };
 
-            m_deviceConfiguration.General.Profiles[m_deviceConfiguration.General.SelectedProfile] = new ArcticFoxConfiguration.Profile();
-            m_deviceConfiguration.General.Profiles[m_deviceConfiguration.General.SelectedProfile].Flags = new ArcticFoxConfiguration.ProfileFlags();
+            _deviceConfiguration.General.Profiles[_deviceConfiguration.General.SelectedProfile] = new ArcticFoxConfiguration.Profile();
+            _deviceConfiguration.General.Profiles[_deviceConfiguration.General.SelectedProfile].Flags = new ArcticFoxConfiguration.ProfileFlags();
         }
 
         double power_val, preheatPower_val, preheatTime_val, preheatDelay_val, resistance_val, tempteratur_val;
+        private TextView resistanceTxt;
+
         public string CheckSetData()
         {
             //if (m_deviceConfiguration == null && Debugger.IsAttached)
@@ -361,18 +439,19 @@ namespace NToolboxAndroid
             //    CreateTestData();
             //}
 
-            if (m_deviceConfiguration == null)
+            if (_deviceConfiguration == null)
             {
                 return "no data!";
             }
 
 
 
-            if (!CheckData()) {
+            if (!CheckData())
+            {
                 return "Checkdata failed!";
             }
 
-            var selectedProfile = m_deviceConfiguration.General.Profiles[m_deviceConfiguration.General.SelectedProfile];
+            var selectedProfile = _deviceConfiguration.General.Profiles[_deviceConfiguration.General.SelectedProfile];
 
 
 
@@ -383,13 +462,15 @@ namespace NToolboxAndroid
                 selectedProfile.Power = (ushort)(power_val * 10f);
 
                 selectedProfile.PreheatType = (ArcticFoxConfiguration.PreheatType)spinnerPreheat.SelectedItemPosition;
-                if (selectedProfile.PreheatType == ArcticFoxConfiguration.PreheatType.Watts) {
+                if (selectedProfile.PreheatType == ArcticFoxConfiguration.PreheatType.Watts)
+                {
                     selectedProfile.PreheatPower = (ushort)(preheatPower_val * 10f);
                 }
-                else {
+                else
+                {
                     selectedProfile.PreheatPower = (ushort)(preheatPower_val);
                 }
-                
+
                 selectedProfile.PreheatTime = (byte)(preheatTime_val * 100f);
                 selectedProfile.PreheatDelay = (byte)preheatDelay_val;
 
@@ -424,10 +505,10 @@ namespace NToolboxAndroid
 
         private void LoadBaseData()
         {
-            deviceName.Text = HidDeviceInfo.Get(m_deviceConfiguration.Info.ProductId).Name+":";
+            deviceName.Text = HidDeviceInfo.Get(_deviceConfiguration.Info.ProductId).Name + ":";
 
             adapterSpinnerPreheatCurve.Clear();
-            foreach (var curve in m_deviceConfiguration.Advanced.PowerCurves)
+            foreach (var curve in _deviceConfiguration.Advanced.PowerCurves)
             {
                 adapterSpinnerPreheatCurve.Add(curve.Name);
             }
@@ -441,38 +522,39 @@ namespace NToolboxAndroid
                 }
                 else
                 {
-                    adapterSpinnerMaterial.Add($"[TFR]{m_deviceConfiguration.Advanced.TFRTables[i - 5].Name}");
+                    adapterSpinnerMaterial.Add($"[TFR]{_deviceConfiguration.Advanced.TFRTables[i - 5].Name}");
                 }
             }
         }
 
-        private ConfigurationReadResult ReadBinaryConfiguration(Func<BackgroundWorker, byte[]> configurationProvider, bool useWorker = true)
-        {
-            if (configurationProvider == null) throw new ArgumentNullException("configurationProvider");
+        //private ConfigurationReadResult ReadBinaryConfiguration(Func<BackgroundWorker, byte[]> configurationProvider, bool useWorker = true)
+        //{
+        //    if (configurationProvider == null) throw new ArgumentNullException("configurationProvider");
 
-            try
-            {
-                var data = configurationProvider(useWorker ? m_worker : null);
-                if (data == null) return new ConfigurationReadResult(null, ReadResult.UnableToRead);
+        //    try
+        //    {
+        //        var data = configurationProvider(useWorker ? m_worker : null);
+        //        if (data == null) return new ConfigurationReadResult(null, ReadResult.UnableToRead);
 
-                var info = BinaryStructure.ReadBinary<ArcticFoxConfiguration.DeviceInfo>(data);
-                if (info.SettingsVersion < ArcticFoxConfiguration.SupportedSettingsVersion || info.FirmwareBuild < ArcticFoxConfiguration.MinimumSupportedBuildNumber)
-                {
-                    return new ConfigurationReadResult(null, ReadResult.OutdatedFirmware);
-                }
-                if (info.SettingsVersion > ArcticFoxConfiguration.SupportedSettingsVersion)
-                {
-                    return new ConfigurationReadResult(null, ReadResult.OutdatedToolbox);
-                }
+        //        var info = BinaryStructure.ReadBinary<ArcticFoxConfiguration.DeviceInfo>(data);
+        //        if (info.SettingsVersion < ArcticFoxConfiguration.SupportedSettingsVersion 
+        //            || info.FirmwareBuild < ArcticFoxConfiguration.MinimumSupportedBuildNumber)
+        //        {
+        //            return new ConfigurationReadResult(null, ReadResult.OutdatedFirmware);
+        //        }
+        //        if (info.SettingsVersion > ArcticFoxConfiguration.SupportedSettingsVersion)
+        //        {
+        //            return new ConfigurationReadResult(null, ReadResult.OutdatedToolbox);
+        //        }
 
-                var configuration = BinaryStructure.ReadBinary<ArcticFoxConfiguration>(data);
-                return new ConfigurationReadResult(configuration, ReadResult.Success);
-            }
-            catch (TimeoutException)
-            {
-                return new ConfigurationReadResult(null, ReadResult.UnableToRead);
-            }
-        }
+        //        var configuration = BinaryStructure.ReadBinary<ArcticFoxConfiguration>(data);
+        //        return new ConfigurationReadResult(configuration, ReadResult.Success);
+        //    }
+        //    catch (TimeoutException)
+        //    {
+        //        return new ConfigurationReadResult(null, ReadResult.UnableToRead);
+        //    }
+        //}
 
         public void OnItemSelected(AdapterView parent, View view, int position, long id)
         {
@@ -541,7 +623,7 @@ namespace NToolboxAndroid
                     HidConnector hc = HidConnector.Instance;
                     if (hc.IsDeviceConnected)
                     {
-                        if (m_deviceConfiguration != null)
+                        if (_deviceConfiguration != null)
                         {
 
 
@@ -549,7 +631,7 @@ namespace NToolboxAndroid
                             builder.SetMessage("sure? the developer of this tool is not resonsible if anything goes wrong. update at your own risk ;)");
                             builder.SetPositiveButton("OK", (s, e) =>
                             {
-                                var data = BinaryStructure.WriteBinary(m_deviceConfiguration);
+                                var data = BinaryStructure.WriteBinary(_deviceConfiguration);
                                 try
                                 {
                                     HidConnector.Instance.WriteConfiguration(data, m_worker);
@@ -595,6 +677,27 @@ namespace NToolboxAndroid
             else if (v.Id == temperaturType.Id)
             {
                 temperaturType.Text = temperaturType.Text.Equals("°F") ? "°C" : "°F";
+            }
+            else if (v.Id == resistanceTxt.Id)
+            {
+
+                try
+                {
+                    var mdata = HidConnector.Instance.ReadMonitoringData();
+                    _monitor = BinaryStructure.ReadBinary<MonitoringData>(mdata);
+                }
+                catch (Exception e)
+                {
+                    //Toast.MakeText(this, $"Unable to read monitordata. {e.ToString()}", ToastLength.Long).Show();
+                }
+                if (_monitor != null)
+                {
+                    var realResistance = _monitor.RealResistance / 1000f;
+                    resistanceTxt.Text = $"Resistance ({realResistance})";
+
+
+                }
+
             }
         }
 

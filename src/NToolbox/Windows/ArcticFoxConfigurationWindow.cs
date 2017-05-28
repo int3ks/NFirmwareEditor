@@ -558,9 +558,10 @@ namespace NToolbox.Windows
 				InSelectorTCFirePlusComboBox.SelectItem(ui.ShortcutsTC[1].InSelector);
 				InSelectorTCPlusMinusComboBox.SelectItem(ui.ShortcutsTC[2].InSelector);
 
-				UpDownButtonsComboBox.SelectItem(ui.IsUpDownSwapped);
-				WakeUpByPlusMinusCheckBox.Checked = ui.WakeUpByPlusMinus;
 				Step1WCheckBox.Checked = ui.IsPowerStep1W;
+				Step1C2FCheckBox.Checked = ui.IsTemperatureStep1C2F;
+				WakeUpByPlusMinusCheckBox.Checked = ui.WakeUpByPlusMinus;
+				UpDownButtonsComboBox.SelectItem(ui.IsUpDownSwapped);
 
 				if (deviceInfo.DisplaySize == ArcticFoxConfiguration.DisplaySize.W96H16)
 				{
@@ -583,10 +584,14 @@ namespace NToolbox.Windows
 
 			var advanced = m_deviceConfiguration.Advanced;
 			{
+				PowerLimitUpDown.Maximum = deviceInfo.MaxDevicePower;
+				PowerLimitUpDown.SetValue(advanced.PowerLimit / 10m);
 				PuffCutOffUpDown.SetValue(advanced.PuffCutOff / 10m);
 				ShuntCorrectionUpDown.SetValue(advanced.ShuntCorrection);
+				InternalResistanceUpDown.SetValue(advanced.InternalResistance / 1000m);
 				RtcModeComboBox.SelectItem(advanced.RtcMode);
 				DeepSleepBehaviorComboBox.SelectItem(advanced.DeepSleepMode);
+				DeepSleepDelayUpDown.SetValue(advanced.DeepSleepDelay);
 				ResetCountersCheckBox.Checked = advanced.ResetCountersOnStartup;
 				CheckTCRCheckBox.Checked = advanced.CheckTCR;
 				UsbChargeCheckBox.Checked = advanced.IsUsbCharge;
@@ -764,9 +769,10 @@ namespace NToolbox.Windows
 				ui.ShortcutsTC[1].InSelector = InSelectorTCFirePlusComboBox.GetSelectedItem<ArcticFoxConfiguration.ShortcutsInSelector>();
 				ui.ShortcutsTC[2].InSelector = InSelectorTCPlusMinusComboBox.GetSelectedItem<ArcticFoxConfiguration.ShortcutsInSelector>();
 
+				ui.IsPowerStep1W = Step1WCheckBox.Checked;
+				ui.IsTemperatureStep1C2F = Step1C2FCheckBox.Checked;
 				ui.IsUpDownSwapped = UpDownButtonsComboBox.GetSelectedItem<bool>();
 				ui.WakeUpByPlusMinus = WakeUpByPlusMinusCheckBox.Checked;
-				ui.IsPowerStep1W = Step1WCheckBox.Checked;
 			}
 
 			var stats = m_deviceConfiguration.Counters;
@@ -790,11 +796,14 @@ namespace NToolbox.Windows
 
 			var advanced = m_deviceConfiguration.Advanced;
 			{
+				advanced.PowerLimit = (ushort)(PowerLimitUpDown.Value * 10);
 				advanced.PuffCutOff = (byte)(PuffCutOffUpDown.Value * 10);
 				advanced.ShuntCorrection = (byte)ShuntCorrectionUpDown.Value;
+				advanced.InternalResistance = (byte)(InternalResistanceUpDown.Value * 1000);
 				advanced.BatteryModel = BatteryModelComboBox.GetSelectedItem<ArcticFoxConfiguration.BatteryModel>();
 				advanced.RtcMode = RtcModeComboBox.GetSelectedItem<ArcticFoxConfiguration.RtcMode>();
 				advanced.DeepSleepMode = DeepSleepBehaviorComboBox.GetSelectedItem<ArcticFoxConfiguration.DeepSleepMode>();
+				advanced.DeepSleepDelay = (byte)DeepSleepDelayUpDown.Value;
 				advanced.ResetCountersOnStartup = ResetCountersCheckBox.Checked;
 				advanced.CheckTCR = CheckTCRCheckBox.Checked;
 				advanced.IsUsbCharge = UsbChargeCheckBox.Checked;
@@ -925,25 +934,57 @@ namespace NToolbox.Windows
 			UpdateListViewPreview(MaterialsListView, tfrTableIndex, ChartPreviewService.CreateTFRCurvePreview(tfrTable, MaterialsListView.LargeImageList.ImageSize));
 		}
 
-		private byte[] PrepairConfiguration(byte[] source, ArcticFoxConfiguration existedConfiguration = null)
+		private ArcticFoxConfiguration GetBlankConfiguration()
 		{
-			var result = BinaryStructure.ReadBinary<ArcticFoxConfiguration>(m_encryption.Decode(source));
-			if (existedConfiguration == null)
+			List<string> failedKeys;
+			SerializableConfiguration blankConfiguration;
+
+			using (var blankCfgStream = new MemoryStream(m_encryption.Decode(Resources.new_configuration)))
 			{
-				SetSharedDeviceInfo(result.Info);
+				blankConfiguration = Serializer.Read<SerializableConfiguration>(blankCfgStream);
+			}
+
+			if (blankConfiguration == null) throw new InvalidOperationException("Blank configuration is corrupted!");
+
+			var configurationDictionary = blankConfiguration.GetDictionary();
+			var result = BinaryStructure.ReadFromDictionary(new ArcticFoxConfiguration(), configurationDictionary, out failedKeys);
+			{
+				result.Info.MaxDevicePower = ArcticFoxConfiguration.MaxPower;
+				result.Info.NumberOfBatteries = ArcticFoxConfiguration.MaxBatteries;
+				result.Info.DisplaySize = ArcticFoxConfiguration.DisplaySize.W64H128;
+			}
+			return result;
+		}
+
+		private void ValidateOpenedConfiguration(IDictionary<string, string> configurationDictionary, ICollection<string> failedKeys)
+		{
+			if (configurationDictionary == null || failedKeys == null || failedKeys.Count <= 0) return;
+
+			var loadedPercents = (int)((configurationDictionary.Count - failedKeys.Count) * 100f / configurationDictionary.Count);
+			string failedSettings;
+			var humanizedFailedKeys = failedKeys.Select(x =>
+			{
+				var dotIndex = x.IndexOf('.');
+				if (dotIndex == -1) return x;
+				return dotIndex + 1 > x.Length ? x : x.Substring(dotIndex + 1);
+			});
+			if (failedKeys.Count > MaximumFailedSettingsInTheReport)
+			{
+				var limitedFailedkeys = humanizedFailedKeys.Take(MaximumFailedSettingsInTheReport);
+				failedSettings = string.Join(Environment.NewLine, limitedFailedkeys.Select(x => "  -> " + x)) +
+				                 Environment.NewLine + "  ...";
 			}
 			else
 			{
-				result.Info = existedConfiguration.Info;
+				failedSettings = string.Join(Environment.NewLine, humanizedFailedKeys.Select(x => "  -> " + x));
 			}
-			return BinaryStructure.WriteBinary(result);
-		}
 
-		private static void SetSharedDeviceInfo(ArcticFoxConfiguration.DeviceInfo deviceInfo)
-		{
-			deviceInfo.MaxDevicePower = ArcticFoxConfiguration.MaxPower;
-			deviceInfo.NumberOfBatteries = ArcticFoxConfiguration.MaxBatteries;
-			deviceInfo.DisplaySize = ArcticFoxConfiguration.DisplaySize.W64H128;
+			InfoBox.Show
+			(
+				"Configuration successfully loaded by {0}%.\n\nSome settings were not read:\n{1}\n\nMore information can be found in the log file.",
+				loadedPercents,
+				failedSettings
+			);
 		}
 
 		private void OpenConfigurationFile(ArcticFoxConfiguration existedConfiguration)
@@ -958,7 +999,7 @@ namespace NToolbox.Windows
 			try
 			{
 				var existedInfoBlock = existedConfiguration != null ? existedConfiguration.Info.Copy() : null;
-				var result = existedConfiguration ?? BinaryStructure.ReadBinary<ArcticFoxConfiguration>(m_encryption.Decode(Resources.new_configuration));
+				var result = existedConfiguration ?? GetBlankConfiguration();
 				var serializableConfiguration = Serializer.Read<SerializableConfiguration>(new MemoryStream(m_encryption.Decode(File.ReadAllBytes(fileName))));
 				if (serializableConfiguration == null)
 				{
@@ -972,41 +1013,9 @@ namespace NToolbox.Windows
 				{
 					result.Info = existedInfoBlock;
 				}
-				else
-				{
-					SetSharedDeviceInfo(result.Info);
-				}
 
 				OpenWorkspace(result);
-
-				if (failedKeys != null && failedKeys.Count > 0)
-				{
-					var loadedPercents = (int)((configurationDictionary.Count - failedKeys.Count) * 100f / configurationDictionary.Count);
-					string failedSettings;
-					var humanizedFailedKeys = failedKeys.Select(x =>
-					{
-						var dotIndex = x.IndexOf('.');
-						if (dotIndex == -1) return x;
-						return dotIndex + 1 > x.Length ? x : x.Substring(dotIndex + 1);
-					});
-					if (failedKeys.Count > MaximumFailedSettingsInTheReport)
-					{
-						var limitedFailedkeys = humanizedFailedKeys.Take(MaximumFailedSettingsInTheReport);
-						failedSettings = string.Join(Environment.NewLine, limitedFailedkeys.Select(x => "  -> " + x)) +
-						                 Environment.NewLine + "  ...";
-					}
-					else
-					{
-						failedSettings = string.Join(Environment.NewLine, humanizedFailedKeys.Select(x => "  -> " + x));
-					}
-
-					InfoBox.Show
-					(
-						"Configuration successfully loaded by {0}%.\n\nSome settings were not read:\n{1}\n\nMore information can be found in the log file.",
-						loadedPercents,
-						failedSettings
-					);
-				}
+				ValidateOpenedConfiguration(configurationDictionary, failedKeys);
 			}
 			catch (Exception ex)
 			{
@@ -1079,7 +1088,7 @@ namespace NToolbox.Windows
 
 		private void NewMenuItem_Click(object sender, EventArgs e)
 		{
-			ReadConfigurationAndShowResult(w => PrepairConfiguration(Resources.new_configuration, m_deviceConfiguration));
+			OpenWorkspace(GetBlankConfiguration());
 		}
 
 		private void OpenMenuItem_Click(object sender, EventArgs e)
@@ -1138,7 +1147,7 @@ namespace NToolbox.Windows
 
 		private void CreateConfigurationLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
 		{
-			ReadConfigurationAndShowResult(w => PrepairConfiguration(Resources.new_configuration));
+			OpenWorkspace(GetBlankConfiguration());
 		}
 
 		private void OpenConfigurationLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

@@ -361,6 +361,12 @@ namespace NToolboxAndroid
             //    CreateTestData();
             //}
 
+            if (m_deviceConfiguration == null)
+            {
+                return "no data!";
+            }
+
+
 
             if (!CheckData()) {
                 return "Checkdata failed!";

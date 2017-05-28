@@ -284,20 +284,23 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
                     <Button
-                      
                         android:id="@+id/download"
                         android:layout_weight="5"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Download" />
                     <Button
-                       
                         android:id="@+id/upload"
                         android:layout_weight="5"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Upload Settings" />
                 </LinearLayout>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="If your Mod wont connect pls try switching off 'USB Charging' (in expert settings fire+'+')"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
             </LinearLayout>
         </ScrollView>
     </RelativeLayout>

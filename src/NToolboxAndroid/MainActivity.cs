@@ -685,6 +685,8 @@ namespace NToolboxAndroid
                 {
                     var mdata = HidConnector.Instance.ReadMonitoringData();
                     _monitor = BinaryStructure.ReadBinary<MonitoringData>(mdata);
+                    mdata = HidConnector.Instance.ReadMonitoringData();
+                   // _monitor = BinaryStructure.ReadBinary<MonitoringData>(mdata);
                 }
                 catch (Exception e)
                 {

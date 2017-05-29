@@ -17,7 +17,7 @@ namespace HidSharp
     public class HidDeviceLoader
     {
         public static PendingIntent permissionPending;
-        public HidStream GetDeviceOrDefault(int vendorId, int productId)
+        public HidDevice GetDeviceOrDefault(int vendorId, int productId)
         {
            
             var usbManager = (UsbManager)Application.Context.GetSystemService(Context.UsbService);
@@ -40,7 +40,7 @@ namespace HidSharp
                     }
                     
 
-                    return new HidStream(device);
+                    return new HidDevice(device);
                 }
             }
             return null;

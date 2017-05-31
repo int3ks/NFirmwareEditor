@@ -11,8 +11,16 @@ using Android.Views;
 using Android.Widget;
 using Android.Util;
 
+namespace NCore.USB.Models { }
+
 namespace NCore
 {
+    public class SimpleDataflash
+    {
+        public int Checksum { get; internal set; }
+        public byte[] Data { get; internal set; }
+    }
+
     class Trace
     {
         internal static void Warn(Exception ex, string v, string key)

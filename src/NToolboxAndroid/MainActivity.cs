@@ -27,8 +27,11 @@ namespace NToolboxAndroid
     public class MainActivity : Activity, IOnItemSelectedListener, IOnClickListener
     {
         private const string ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
+
+        private readonly object locker = new object();
+
         private ArcticFoxConfiguration _deviceConfiguration;
-        private MonitoringData _monitor;
+      //  private MonitoringData _monitor;
         private readonly BackgroundWorker m_worker = new BackgroundWorker { WorkerReportsProgress = true };
         //   private readonly Func<BackgroundWorker, byte[]> m_deviceConfigurationProvider = worker => HidConnector.Instance.ReadConfiguration(worker);
         Button uploadButton;
@@ -80,9 +83,8 @@ namespace NToolboxAndroid
 
             _InitializeUsb();
 
-
-            //t = new Handler();
-            //t.PostDelayed(doRefresh, 500);
+            t = new Handler();
+            t.PostDelayed(doRefresh, 1000);
 
 
         }
@@ -90,34 +92,9 @@ namespace NToolboxAndroid
         public void doRefresh()
         {
 
-            //HidConnector hc = HidConnector.Instance;
-            //if (hc.IsDeviceConnected)
-            //{
-            //    byte[] bytes = null;
-            //    try
-            //    {
-            //        bytes = HidConnector.Instance.ReadMonitoringData();
-            //    }
-            //    catch (Exception e)
-            //    {
-            //        Toast.MakeText(this, e.ToString(), ToastLength.Long);
-            //    }
-
-            //    var data = BinaryStructure.ReadBinary<MonitoringData>(bytes);
-            //    var realResistance = data.RealResistance / 1000f;
-            //    if (realResistance > 0)
-            //    {
-            //        RunOnUiThread(() =>
-            //        {
-
-            //            resistanceTxt.Text = $"Resistance ({realResistance})";
-
-            //        });
-            //    }
-            //}
-            t.PostDelayed(doRefresh, 500);
+            GetRealtimeData();
+            t.PostDelayed(doRefresh, 1000);
         }
-
 
         private void InitControls()
         {
@@ -328,14 +305,15 @@ namespace NToolboxAndroid
             HidConnector hc = HidConnector.Instance;
             if (hc.IsDeviceConnected)
             {
-                // var readResult = ReadBinaryConfiguration(m_deviceConfigurationProvider, false);
-                // m_deviceConfiguration = readResult.Configuration;
-
-
+                
                 try
                 {
-                    var cdata = HidConnector.Instance.ReadConfiguration();
-                    _deviceConfiguration = BinaryStructure.ReadBinary<ArcticFoxConfiguration>(cdata);
+                    lock (locker)
+                    {
+
+                        var cdata = HidConnector.Instance.ReadConfiguration();
+                        _deviceConfiguration = BinaryStructure.ReadBinary<ArcticFoxConfiguration>(cdata);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -343,71 +321,60 @@ namespace NToolboxAndroid
                 }
 
 
-                //try
-                //{
-                //    var mdata = HidConnector.Instance.ReadMonitoringData();
-                //    _monitor = BinaryStructure.ReadBinary<MonitoringData>(mdata);
-                //}
-                //catch (Exception e)
-                //{
-                //    //Toast.MakeText(this, $"Unable to read monitordata. {e.ToString()}", ToastLength.Long).Show();
-                //}
-
-
                 RunOnUiThread(() =>
+                {
+
+
+
+                    if (_deviceConfiguration != null)
+
                     {
-                       
+                        LoadBaseData();
 
+                        var selectedProfile = _deviceConfiguration.General.Profiles[_deviceConfiguration.General.SelectedProfile];
 
-                        if (_deviceConfiguration != null)
+                        profileName.Text = selectedProfile.Name;
 
+                        power.Text = (selectedProfile.Power / 10f).ToString();
+
+                        spinnerPreheat.SetSelection((int)selectedProfile.PreheatType);
+
+                        if (selectedProfile.PreheatType == ArcticFoxConfiguration.PreheatType.Watts)
                         {
-                            LoadBaseData();
-
-                            var selectedProfile = _deviceConfiguration.General.Profiles[_deviceConfiguration.General.SelectedProfile];
-
-                            profileName.Text = selectedProfile.Name;
-
-                            power.Text = (selectedProfile.Power / 10f).ToString();
-
-                            spinnerPreheat.SetSelection((int)selectedProfile.PreheatType);
-
-                            if (selectedProfile.PreheatType == ArcticFoxConfiguration.PreheatType.Watts)
-                            {
-                                preheatPower.Text = (selectedProfile.PreheatPower / 10f).ToString();
-                            }
-                            else
-                            {
-                                preheatPower.Text = selectedProfile.PreheatPower.ToString();
-                            }
-
-                            preheatTime.Text = (selectedProfile.PreheatTime / 100f).ToString();
-
-                            preheatDelay.Text = selectedProfile.PreheatDelay.ToString();
-
-                            spinnerMode.SetSelection(((int)selectedProfile.Flags.Material) == 0 ? 0 : 1);
-
-                            var coil = (int)selectedProfile.Flags.Material;
-                            spinnerMaterial.SetSelection(coil);
-
-                            resistance.Text = (selectedProfile.Resistance / 1000f).ToString();
-
-                            resistanceLocked.Checked = selectedProfile.Flags.IsResistanceLocked;
-
-                            temperatur.Text = selectedProfile.Temperature.ToString();
-
-                            temperaturType.Text = selectedProfile.Flags.IsCelcius ? "°C" : "°F";
-
-                            temperaturDominant.Checked = selectedProfile.Flags.IsTemperatureDominant;
-
-
-
-
-
-
-
+                            preheatPower.Text = (selectedProfile.PreheatPower / 10f).ToString();
                         }
-                    });
+                        else
+                        {
+                            preheatPower.Text = selectedProfile.PreheatPower.ToString();
+                        }
+
+                        preheatTime.Text = (selectedProfile.PreheatTime / 100f).ToString();
+
+                        preheatDelay.Text = selectedProfile.PreheatDelay.ToString();
+
+                        spinnerMode.SetSelection(((int)selectedProfile.Flags.Material) == 0 ? 0 : 1);
+
+                        var coil = (int)selectedProfile.Flags.Material;
+                        spinnerMaterial.SetSelection(coil);
+
+                        resistance.Text = (selectedProfile.Resistance / 1000f).ToString();
+
+                        resistanceLocked.Checked = selectedProfile.Flags.IsResistanceLocked;
+
+                        temperatur.Text = selectedProfile.Temperature.ToString();
+
+                        temperaturType.Text = selectedProfile.Flags.IsCelcius ? "°C" : "°F";
+
+                        temperaturDominant.Checked = selectedProfile.Flags.IsTemperatureDominant;
+
+
+
+
+
+
+
+                    }
+                });
 
 
 
@@ -527,35 +494,7 @@ namespace NToolboxAndroid
             }
         }
 
-        //private ConfigurationReadResult ReadBinaryConfiguration(Func<BackgroundWorker, byte[]> configurationProvider, bool useWorker = true)
-        //{
-        //    if (configurationProvider == null) throw new ArgumentNullException("configurationProvider");
-
-        //    try
-        //    {
-        //        var data = configurationProvider(useWorker ? m_worker : null);
-        //        if (data == null) return new ConfigurationReadResult(null, ReadResult.UnableToRead);
-
-        //        var info = BinaryStructure.ReadBinary<ArcticFoxConfiguration.DeviceInfo>(data);
-        //        if (info.SettingsVersion < ArcticFoxConfiguration.SupportedSettingsVersion 
-        //            || info.FirmwareBuild < ArcticFoxConfiguration.MinimumSupportedBuildNumber)
-        //        {
-        //            return new ConfigurationReadResult(null, ReadResult.OutdatedFirmware);
-        //        }
-        //        if (info.SettingsVersion > ArcticFoxConfiguration.SupportedSettingsVersion)
-        //        {
-        //            return new ConfigurationReadResult(null, ReadResult.OutdatedToolbox);
-        //        }
-
-        //        var configuration = BinaryStructure.ReadBinary<ArcticFoxConfiguration>(data);
-        //        return new ConfigurationReadResult(configuration, ReadResult.Success);
-        //    }
-        //    catch (TimeoutException)
-        //    {
-        //        return new ConfigurationReadResult(null, ReadResult.UnableToRead);
-        //    }
-        //}
-
+       
         public void OnItemSelected(AdapterView parent, View view, int position, long id)
         {
             if (parent.Id == spinnerPreheat.Id)
@@ -680,30 +619,42 @@ namespace NToolboxAndroid
             }
             else if (v.Id == resistanceTxt.Id)
             {
-
-                try
-                {
-                    var mdata = HidConnector.Instance.ReadMonitoringData();
-                    _monitor = BinaryStructure.ReadBinary<MonitoringData>(mdata);
-                    mdata = HidConnector.Instance.ReadMonitoringData();
-                   // _monitor = BinaryStructure.ReadBinary<MonitoringData>(mdata);
-                }
-                catch (Exception e)
-                {
-                    //Toast.MakeText(this, $"Unable to read monitordata. {e.ToString()}", ToastLength.Long).Show();
-                }
-                if (_monitor != null)
-                {
-                    var realResistance = _monitor.RealResistance / 1000f;
-                    resistanceTxt.Text = $"Resistance ({realResistance})";
-
-
-                }
+                GetRealtimeData();
 
             }
         }
 
+        private void GetRealtimeData()
+        {
+            if (!HidConnector.Instance.IsDeviceConnected) return;
 
+
+            MonitoringData monitordata = null;
+            try
+            {
+                lock (locker)
+                {
+                    var mdata = HidConnector.Instance.ReadMonitoringData();
+                    monitordata = BinaryStructure.ReadBinary<MonitoringData>(mdata);
+                    HidConnector.Instance.ReadMonitoringData();
+                }
+            }
+            catch (Exception e)
+            {
+                //Toast.MakeText(this, $"Unable to read monitordata. {e.ToString()}", ToastLength.Long).Show();
+            }
+            if (monitordata != null)
+            {
+                RunOnUiThread(() =>
+                {
+                    var realResistance = monitordata.RealResistance / 1000f;
+                    resistanceTxt.Text = $"Resistance ({realResistance})";
+                });
+
+
+
+            }
+        }
         private class ConfigurationReadResult
         {
             public ConfigurationReadResult(ArcticFoxConfiguration configuration, ReadResult result)

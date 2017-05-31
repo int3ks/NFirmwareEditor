@@ -73,14 +73,8 @@
     <Compile Include="..\NCore\USB\HidDeviceInfo.cs">
       <Link>HidDeviceInfo.cs</Link>
     </Compile>
-    <Compile Include="..\NCore\USB\SimpleDataflash.cs">
-      <Link>SimpleDataflash.cs</Link>
-    </Compile>
     <Compile Include="..\NToolbox\Models\ArcticFoxConfiguration.cs">
       <Link>ArcticFoxConfiguration.cs</Link>
-    </Compile>
-    <Compile Include="..\NToolbox\Models\BatteryPresets.cs">
-      <Link>BatteryPresets.cs</Link>
     </Compile>
     <Compile Include="..\NToolbox\Models\MonitoringData.cs">
       <Link>MonitoringData.cs</Link>
